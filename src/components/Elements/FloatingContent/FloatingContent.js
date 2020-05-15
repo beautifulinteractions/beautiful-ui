@@ -39,6 +39,7 @@ const FloatingContent = (props) => {
     if (isShown && triggerWrapperRef.current) {
       const nextStyle = getFloaterAbsolutePosition(triggerWrapperRef.current, placement, offset, widthAsTrigger);
       setElementStyle(nextStyle);
+      setDerivedPlacement(placement); // update placement status when placement change
     }
   };
 
@@ -47,7 +48,7 @@ const FloatingContent = (props) => {
     if (isShown && elementStyle) {
       let nextPlacement = derivedPlacement;
       const isThereEnoughSpace = checkAvailableSpace(contentWrapperRef.current);
-      if (recalculatePositionTimes >= 2) {
+      if (reversePlacementOnSmallSpace && recalculatePositionTimes >= 2) {
         setElementStyle(undefined);
         setDerivedPlacement(placement);
         warn('It is impossible to show the FloatingContent because there\'s no enough space to show it.');
