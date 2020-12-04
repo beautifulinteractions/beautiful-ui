@@ -22,7 +22,6 @@ describe('FloatingContent component', () => {
     expect(document.querySelector('#bi-floats')).to.exist;
   });
 
-
   it('should have default classes', () => {
     render(
       <FloatingContent onToggle={noop} trigger={Trigger} isShown className="foo" reversePlacementOnSmallSpace={false}>
@@ -137,9 +136,27 @@ describe('FloatingContent component', () => {
         some text here
       </FloatingContent>,
     );
-
     const floatingContent = document.querySelector('#bi-floats .bi.bi-floater');
 
     expect(floatingContent.getAttribute('style')).not.equal('margin: 10px;');
+  });
+
+  it('should perform "onToggle" callback when clicking outside the Floating Component', () => {
+    const onToggleSpy = sinon.spy();
+
+    const { container } = render(
+      <div>
+        <div id="foo" />
+        <FloatingContent trigger={Trigger} isShown onToggle={onToggleSpy}>
+          some text here
+        </FloatingContent>
+      </div>,
+    );
+
+    const externalDiv = container.querySelector('#foo');
+
+    fireEvent.click(externalDiv);
+
+    expect(onToggleSpy.calledOnce).to.be.true;
   });
 });

@@ -50,7 +50,7 @@ const DropDownButton = () => {
   }); 
   
   return (
-    <DropDown trigger={Trigger} isShown={isShown} onToggle={toggleHandler} placement="top-center">
+    <DropDown trigger={Trigger} isShown={isShown} onToggle={toggleHandler} placement="bottom-right">
       <DropDown.Button icon="home">Home</DropDown.Button>
       <DropDown.Button icon="calendar">Events</DropDown.Button>
       <DropDown.Button icon="bell">Notifications</DropDown.Button>

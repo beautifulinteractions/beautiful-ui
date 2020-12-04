@@ -7,6 +7,7 @@ import { Placement, warn } from '../../../shared';
 import getFloaterAbsolutePosition from './utils/getFloaterAbsolutePosition';
 import checkAvailableSpace from './utils/checkAvailableSpace';
 import getOppositePlacement from './utils/getOppositePlacement';
+import checkAvailableSpaceByPlacement from './utils/checkAvailableSpaceByPlacement';
 
 import './floating-content.scss';
 
@@ -23,6 +24,7 @@ const FloatingContent = (props) => {
   } = props;
   const triggerWrapperRef = useRef(null);
   const contentWrapperRef = useRef(null);
+  const [isFloatingContentShown, setFloatingContentIsShown] = useState(true);
   const [elementStyle, setElementStyle] = useState(null);
   const [mouseIsHovering, setMouseHover] = useState(false);
   /**
@@ -31,15 +33,15 @@ const FloatingContent = (props) => {
    */
   const [derivedPlacement, setDerivedPlacement] = useState(placement);
   // use to check how many times the position has been recalculated
-  const [recalculatePositionTimes, setRecalculatePositionTimes] = useState();
+  const recalculatePositionTimes = useRef(0);
   const classList = classNames('bi bi-floater', { [`float-${derivedPlacement}`]: !!derivedPlacement }, className);
 
   // Derives the component's position from the trigger's wrapper element then set it as elementStyle state.
   const calcPopupPosition = () => {
     if (isShown && triggerWrapperRef.current) {
       const nextStyle = getFloaterAbsolutePosition(triggerWrapperRef.current, placement, offset, widthAsTrigger);
-      setElementStyle(nextStyle);
       setDerivedPlacement(placement); // update placement status when placement change
+      setElementStyle(nextStyle);
     }
   };
 
@@ -47,32 +49,33 @@ const FloatingContent = (props) => {
   useEffect(() => {
     if (isShown && elementStyle) {
       let nextPlacement = derivedPlacement;
-      const isThereEnoughSpace = checkAvailableSpace(contentWrapperRef.current);
-      if (reversePlacementOnSmallSpace && recalculatePositionTimes >= 2) {
+      const contentWrapperRect = contentWrapperRef.current ? contentWrapperRef.current.getBoundingClientRect() : null;
+      const isThereEnoughSpace = contentWrapperRect && checkAvailableSpace(contentWrapperRect);
+      if (reversePlacementOnSmallSpace && recalculatePositionTimes.current >= 2) {
         setElementStyle(undefined);
-        setDerivedPlacement(placement);
-        warn('It is impossible to show the FloatingContent because there\'s no enough space to show it.');
+        setDerivedPlacement(undefined);
+        warn('It is impossible to show the content in the right position as there\'s no enough space.');
         return;
       }
-
       // if it is required to find the better position when there's no space to show the floating content
-      if (reversePlacementOnSmallSpace && !isThereEnoughSpace && recalculatePositionTimes < 2) {
-        nextPlacement = getOppositePlacement(placement);
+      // eslint-disable-next-line max-len
+      if (reversePlacementOnSmallSpace && !isThereEnoughSpace && recalculatePositionTimes.current < 2 && contentWrapperRect) {
+        nextPlacement = getOppositePlacement(contentWrapperRect, nextPlacement);
         const nextStyle = getFloaterAbsolutePosition(triggerWrapperRef.current, nextPlacement, offset, widthAsTrigger);
         setElementStyle(nextStyle);
-        setRecalculatePositionTimes(recalculatePositionTimes + 1);
+        recalculatePositionTimes.current += 1;
       }
-
       setDerivedPlacement(nextPlacement);
     }
-  }, [elementStyle]);
+  }, [JSON.stringify(elementStyle)]);
 
 
   useEffect(() => {
     if (!isShown) {
       setElementStyle(undefined);
       setDerivedPlacement(placement);
-      setRecalculatePositionTimes(0);
+      recalculatePositionTimes.current = 0;
+      setFloatingContentIsShown(true);
     }
   }, [isShown]);
 
@@ -89,7 +92,20 @@ const FloatingContent = (props) => {
   useEffect(calcPopupPosition, [isShown, offset, placement, children]);
 
   // recalculates the component's position on window resize
-  useWindowResize(calcPopupPosition);
+  useWindowResize(() => {
+    if (contentWrapperRef.current) {
+      const contentWrapperRect = contentWrapperRef.current.getBoundingClientRect();
+      const triggerWrapperRect = triggerWrapperRef.current.getBoundingClientRect();
+      const isThereEnoughSpace = checkAvailableSpaceByPlacement(contentWrapperRect, triggerWrapperRect, placement);
+      if (isThereEnoughSpace) {
+        calcPopupPosition();
+      } else {
+        // eslint-disable-next-line max-len
+        const nextStyle = getFloaterAbsolutePosition(triggerWrapperRef.current, derivedPlacement, offset, widthAsTrigger);
+        setElementStyle(nextStyle);
+      }
+    }
+  });
 
   // adds the click event listener when clickOutsideToToggle is true and when action is click
   useEffect(() => {
@@ -132,7 +148,7 @@ const FloatingContent = (props) => {
       <span className="bi bi-float-trigger" ref={triggerWrapperRef} role="complementary" {...actions}>
         {trigger}
       </span>
-      {!isShown ? null : (
+      {!isShown || !isFloatingContentShown ? null : (
         <Portal id="bi-floats">
           {/* The floating content is shown within a Portal to avoid layout glitches */}
           <div {...rest} className={classList} style={elementStyle} ref={contentWrapperRef}>

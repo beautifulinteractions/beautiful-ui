@@ -2,7 +2,7 @@
  * This function checks if it has enough space for the FloatingContent to be shown
  */
 const checkAvailableSpace = (el) => {
-  const bounding = el.getBoundingClientRect();
+  const bounding = el;
   const h = window.innerHeight || document.documentElement.clientHeight;
   const w = window.innerWidth || document.documentElement.clientWidth;
 
