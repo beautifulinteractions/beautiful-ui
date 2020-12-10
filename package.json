@@ -1,6 +1,6 @@
 {
   "name": "beautiful-react-ui",
-  "version": "0.57.0",
+  "version": "0.57.1",
   "description": "A collection of lightweight and easy-to-customise controlled React components",
   "main": "dist/index.js",
   "files": [

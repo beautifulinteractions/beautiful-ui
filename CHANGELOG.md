@@ -1098,3 +1098,10 @@ disable `Hot` and enable `live reloading` (it refresh when something changes)
 ### Fixed
 
 - Moved `react` and `react-dom` from `dependencies` to `peerDependencies`
+
+## [0.57.1] - 2020-12-10
+
+
+### Fixed
+
+- Dropdown position calculations
