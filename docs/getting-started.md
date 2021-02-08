@@ -33,13 +33,13 @@ As a result, we've decided to develop a library putting ease of customization as
 Install the `beautiful-react-ui` package from NPM:
 
 ```bash
-npm install beautiful-ui-react
+npm install beautiful-react-ui
 ```
 
 or from yarn:
 
 ```bash
-yarn add beautiful-ui-react
+yarn add beautiful-react-ui
 ```
 
 #### If using webpack:
